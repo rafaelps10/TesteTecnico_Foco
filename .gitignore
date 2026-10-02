@@ -1,0 +1,29 @@
+# Laravel
+foco-api/.env
+foco-api/.env.backup
+foco-api/.env.production
+
+# Dependencies
+foco-api/vendor/
+foco-api/node_modules/
+
+# Laravel generated files
+foco-api/public/build/
+foco-api/public/storage/
+foco-api/storage/*.key
+foco-api/storage/logs/
+foco-api/storage/framework/cache/
+foco-api/storage/framework/sessions/
+foco-api/storage/framework/views/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test/cache
+.phpunit.result.cache
+.phpunit.cache/
