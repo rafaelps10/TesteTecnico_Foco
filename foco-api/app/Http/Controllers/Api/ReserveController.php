@@ -14,6 +14,7 @@ class ReserveController extends Controller
         summary: 'Cria uma reserva',
         description: 'Cria uma nova reserva após validar o hotel, o quarto, o período informado e a disponibilidade do quarto.',
         tags: ['Reserves'],
+        security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(

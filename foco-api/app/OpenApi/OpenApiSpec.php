@@ -13,6 +13,12 @@ use OpenApi\Attributes as OA;
     url: 'http://127.0.0.1:8000',
     description: 'Servidor local de desenvolvimento'
 )]
+#[OA\SecurityScheme(
+    securityScheme: 'bearerAuth',
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'Sanctum Token'
+)]
 class OpenApiSpec
 {
 }

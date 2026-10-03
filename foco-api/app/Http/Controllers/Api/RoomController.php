@@ -15,6 +15,7 @@ class RoomController extends Controller
         summary: 'Lista os quartos',
         description: 'Retorna todos os quartos cadastrados, incluindo o hotel relacionado.',
         tags: ['Rooms'],
+        security: [['bearerAuth' => []]],
         responses: [
             new OA\Response(
                 response: 200,
@@ -36,6 +37,7 @@ class RoomController extends Controller
         summary: 'Cadastra um quarto',
         description: 'Cria um novo quarto associado a um hotel existente.',
         tags: ['Rooms'],
+        security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -81,6 +83,7 @@ class RoomController extends Controller
         summary: 'Consulta um quarto',
         description: 'Retorna os dados de um quarto específico, incluindo o hotel relacionado.',
         tags: ['Rooms'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -122,6 +125,7 @@ class RoomController extends Controller
         summary: 'Atualiza um quarto',
         description: 'Atualiza os dados de um quarto existente.',
         tags: ['Rooms'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -189,6 +193,7 @@ class RoomController extends Controller
         summary: 'Exclui um quarto',
         description: 'Exclui um quarto existente.',
         tags: ['Rooms'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
