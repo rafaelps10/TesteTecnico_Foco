@@ -22,8 +22,8 @@ class ReserveService
         string $checkOut
     ): bool {
         return Reserve::where('room_id', $roomId)
-            ->where('check_in', '<', $checkOut)
-            ->where('check_out', '>', $checkIn)
+            ->whereDate('check_in', '<', $checkOut)
+            ->whereDate('check_out', '>', $checkIn)
             ->exists();
     }
 
