@@ -1,58 +1,535 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Foco Multimídia — API de Hotelaria
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST desenvolvida como solução para o desafio técnico da Foco Multimídia.
 
-## About Laravel
+O projeto realiza a importação de dados hoteleiros a partir de arquivos XML, persiste essas informações em banco de dados e disponibiliza APIs REST para gerenciamento de quartos e criação de reservas.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Tecnologias
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+* PHP 8.4+
+* Laravel 13
+* SQLite
+* Eloquent ORM
+* Pest / PHPUnit
+* Laravel Scheduler
+* Git
+* XML
+* JSON
+* REST API
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 📋 Requisitos
 
-## Learning Laravel
+Para executar o projeto, é necessário possuir:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+* PHP 8.4 ou superior
+* Composer
+* Git
+* Extensão SQLite habilitada no PHP
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📁 Estrutura do projeto
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```text
+foco-api/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   └── Requests/
+│   ├── Models/
+│   └── Services/
+├── database/
+│   └── migrations/
+├── routes/
+│   ├── api.php
+│   └── console.php
+├── tests/
+│   ├── Feature/
+│   └── Unit/
+├── artisan
+├── composer.json
+└── README.md
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Os arquivos XML utilizados na importação ficam no diretório:
 
-## Contributing
+```text
+../database/xml/
+├── hotels.xml
+├── rooms.xml
+└── reserves.xml
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## ⚙️ Instalação
 
-## Code of Conduct
+Clone o projeto:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone <URL_DO_REPOSITORIO>
+```
 
-## Security Vulnerabilities
+Entre no diretório da aplicação:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+cd foco-api
+```
 
-## License
+Instale as dependências:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+composer install
+```
+
+Crie o arquivo `.env`:
+
+```bash
+cp .env.example .env
+```
+
+No Windows/PowerShell, caso necessário:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Gere a chave da aplicação:
+
+```bash
+php artisan key:generate
+```
+
+## 🗄️ Banco de dados
+
+O projeto utiliza SQLite.
+
+Crie o arquivo do banco, caso ele ainda não exista:
+
+```powershell
+New-Item database/database.sqlite -ItemType File
+```
+
+Execute as migrations:
+
+```bash
+php artisan migrate
+```
+
+As migrations criam as seguintes tabelas:
+
+```text
+hotels
+rooms
+reserves
+guests
+dailies
+payments
+```
+
+### Relacionamentos
+
+```text
+Hotel
+ ├── Rooms
+ └── Reserves
+       ├── Guests
+       ├── Dailies
+       └── Payments
+
+Room
+ └── Reserves
+```
+
+## 📥 Importação dos XMLs
+
+A aplicação possui o comando Artisan:
+
+```bash
+php artisan xml:import
+```
+
+O comando recupera os dados dos arquivos XML e persiste as informações no banco de dados.
+
+Os dados importados incluem:
+
+* hotéis;
+* quartos;
+* reservas;
+* hóspedes;
+* diárias;
+* pagamentos.
+
+### Idempotência
+
+A importação foi implementada de forma idempotente.
+
+Isso significa que executar:
+
+```bash
+php artisan xml:import
+```
+
+mais de uma vez não deve gerar registros duplicados dos dados importados.
+
+### Validações da importação
+
+Durante a importação são verificadas as relações entre:
+
+* hotel;
+* quarto;
+* reserva.
+
+Também é registrada uma mensagem de log quando uma diária possui uma data fora do período da reserva.
+
+A informação original do XML é preservada, sem correção silenciosa do dado.
+
+## ⏰ Scheduler / CRON
+
+A importação foi configurada no Laravel Scheduler em:
+
+```text
+routes/console.php
+```
+
+Configuração atual:
+
+```php
+Schedule::command('xml:import')
+    ->daily()
+    ->withoutOverlapping();
+```
+
+Isso configura a execução diária do comando:
+
+```bash
+php artisan xml:import
+```
+
+O `withoutOverlapping()` evita que uma nova execução seja iniciada enquanto outra importação ainda estiver em andamento.
+
+### Verificar tarefas agendadas
+
+```bash
+php artisan schedule:list
+```
+
+### Executar o Scheduler manualmente
+
+```bash
+php artisan schedule:run
+```
+
+Em produção, o sistema operacional deve executar o Scheduler do Laravel periodicamente.
+
+Exemplo de configuração do CRON em ambientes Linux:
+
+```cron
+* * * * * cd /caminho/do/projeto && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## 🛏️ API de quartos
+
+A API disponibiliza operações CRUD para quartos.
+
+### Listar quartos
+
+```http
+GET /api/rooms
+```
+
+### Consultar um quarto
+
+```http
+GET /api/rooms/{id}
+```
+
+### Cadastrar quarto
+
+```http
+POST /api/rooms
+Content-Type: application/json
+```
+
+Exemplo:
+
+```json
+{
+    "hotel_id": 1,
+    "name": "Room 10 Hotel 1"
+}
+```
+
+### Atualizar quarto
+
+```http
+PUT /api/rooms/{id}
+Content-Type: application/json
+```
+
+Exemplo:
+
+```json
+{
+    "hotel_id": 1,
+    "name": "Room 10 Updated"
+}
+```
+
+### Excluir quarto
+
+```http
+DELETE /api/rooms/{id}
+```
+
+## 🏨 API de reservas
+
+A aplicação disponibiliza um endpoint REST para criação de reservas.
+
+### Criar reserva
+
+```http
+POST /api/reserves
+Content-Type: application/json
+```
+
+Exemplo:
+
+```json
+{
+    "hotel_id": 1,
+    "room_id": 2,
+    "check_in": "2026-12-10",
+    "check_out": "2026-12-12",
+    "total": 500.00
+}
+```
+
+### Resposta de sucesso
+
+HTTP:
+
+```text
+201 Created
+```
+
+Exemplo:
+
+```json
+{
+    "message": "Reserva criada com sucesso.",
+    "data": {
+        "hotel_id": 1,
+        "room_id": 2,
+        "check_in": "2026-12-10",
+        "check_out": "2026-12-12",
+        "total": "500.00"
+    }
+}
+```
+
+## 🔎 Regras de reserva
+
+Antes de criar uma reserva, a API verifica:
+
+### Hotel existente
+
+O `hotel_id` informado deve existir.
+
+### Quarto existente
+
+O `room_id` informado deve existir.
+
+### Relação entre hotel e quarto
+
+O quarto deve pertencer ao hotel informado.
+
+### Datas
+
+A data de checkout deve ser posterior à data de check-in.
+
+### Disponibilidade
+
+A API verifica se já existe uma reserva para o mesmo quarto no período informado.
+
+Reservas consecutivas são permitidas.
+
+Exemplo:
+
+```text
+Reserva 1: 10/12 → 12/12
+Reserva 2:          12/12 → 14/12
+```
+
+Esse cenário não é considerado conflito.
+
+Já uma sobreposição:
+
+```text
+Reserva 1: 10/12 → 12/12
+Reserva 2:      11/12 → 13/12
+```
+
+é rejeitada.
+
+Nesse caso a API retorna:
+
+```text
+422 Unprocessable Entity
+```
+
+```json
+{
+    "message": "O quarto não está disponível para o período informado."
+}
+```
+
+## 🧪 Testes automatizados
+
+Os testes foram implementados utilizando Pest sobre a infraestrutura do PHPUnit.
+
+Executar todos os testes:
+
+```bash
+php artisan test
+```
+
+Resultado atual:
+
+```text
+Tests: 10 passed
+Assertions: 30
+```
+
+Os testes cobrem, entre outros cenários:
+
+* criação de reserva válida;
+* hotel inexistente;
+* quarto inexistente;
+* quarto pertencente a outro hotel;
+* data de checkout inválida;
+* valor total negativo;
+* conflito de reservas;
+* reserva em período disponível.
+
+Os testes de integração utilizam `RefreshDatabase` para manter o banco de testes isolado.
+
+## 🧱 Arquitetura da reserva
+
+A criação de reservas utiliza responsabilidades separadas.
+
+### Form Request
+
+`StoreReserveRequest`
+
+Responsável pela validação dos dados recebidos pela API.
+
+### Controller
+
+`ReserveController`
+
+Responsável pelo fluxo HTTP da requisição.
+
+### Service
+
+`ReserveService`
+
+Responsável pelas regras de negócio relacionadas à reserva, como:
+
+* verificar se o quarto pertence ao hotel;
+* verificar conflito de datas;
+* criar a reserva.
+
+Essa separação mantém o Controller mais simples e facilita a manutenção e os testes.
+
+## 🔄 Fluxo da importação
+
+```text
+Arquivos XML
+     ↓
+XmlImportCommand
+     ↓
+XmlImportService
+     ↓
+Validação dos relacionamentos
+     ↓
+Persistência no banco
+     ↓
+Logs de inconsistências
+```
+
+## 🔄 Fluxo da criação de reserva
+
+```text
+Cliente
+   ↓
+POST /api/reserves
+   ↓
+StoreReserveRequest
+   ↓
+ReserveController
+   ↓
+ReserveService
+   ├── valida hotel/quarto
+   ├── verifica disponibilidade
+   └── cria reserva
+   ↓
+Banco de dados
+   ↓
+Resposta JSON
+```
+
+## 📝 Versionamento
+
+O projeto utiliza Git para versionamento do código e das alterações de banco através das migrations.
+
+As principais etapas foram organizadas em commits independentes:
+
+```text
+chore: initialize Laravel technical challenge
+feat: implement database model and XML import foundation
+feat: implement rooms CRUD API
+feat: implement reservation API
+test: add reservation feature tests
+feat: schedule XML import
+```
+
+## ▶️ Executando a aplicação
+
+Inicie o servidor local:
+
+```bash
+php artisan serve
+```
+
+A aplicação ficará disponível em:
+
+```text
+http://127.0.0.1:8000
+```
+
+## 🔐 Configurações de ambiente
+
+Informações sensíveis e configurações específicas do ambiente devem permanecer no arquivo `.env`.
+
+O arquivo `.env` não deve ser versionado.
+
+Para configurar um novo ambiente, utilize:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+## 📌 Observações
+
+Este projeto foi desenvolvido como solução para um desafio técnico da Foco Multimídia, tendo como foco os requisitos obrigatórios de:
+
+* modelagem do banco;
+* importação de XML;
+* execução automatizada da importação;
+* API REST de quartos;
+* API REST de reservas;
+* respostas JSON;
+* testes automatizados;
+* versionamento do projeto.
+
+Funcionalidades adicionais podem ser incorporadas posteriormente, como documentação OpenAPI/Swagger, autenticação e autorização, Docker, logs estruturados e outras regras de negócio.
+
+````
