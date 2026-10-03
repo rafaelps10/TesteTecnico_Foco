@@ -4,19 +4,26 @@ API REST desenvolvida como solução para o desafio técnico da Foco Multimídia
 
 O projeto realiza a importação de dados hoteleiros a partir de arquivos XML, persiste essas informações em banco de dados e disponibiliza APIs REST para gerenciamento de quartos e criação de reservas.
 
+O projeto também implementa autenticação baseada em tokens, documentação interativa com Swagger/OpenAPI 3, testes automatizados e execução agendada da importação dos arquivos XML.
+
+---
+
 ## 🚀 Tecnologias
 
 * PHP 8.4+
 * Laravel 13
 * SQLite
 * Eloquent ORM
+* Laravel Sanctum
 * Pest / PHPUnit
 * Laravel Scheduler
+* Swagger / OpenAPI 3
 * Git
 * XML
 * JSON
 * REST API
-* Swagger / OpenAPI 3
+
+---
 
 ## 📋 Requisitos
 
@@ -27,53 +34,61 @@ Para executar o projeto, é necessário possuir:
 * Git
 * Extensão SQLite habilitada no PHP
 
+---
+
 ## 📁 Estrutura do projeto
 
 ```text
-foco-api/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   └── Requests/
-│   ├── Models/
-│   ├── OpenApi/
-│   └── Services/
-├── config/
-│   └── l5-swagger.php
+TesteTecnico_Foco/
 ├── database/
-│   └── migrations/
-├── routes/
-│   ├── api.php
-│   └── console.php
-├── tests/
-│   ├── Feature/
-│   └── Unit/
-├── artisan
-├── composer.json
-└── README.md
+│   └── xml/
+│       ├── hotels.xml
+│       ├── rooms.xml
+│       └── reserves.xml
+├── foco-api/
+│   ├── app/
+│   │   ├── Http/
+│   │   │   ├── Controllers/
+│   │   │   └── Requests/
+│   │   ├── Models/
+│   │   ├── OpenApi/
+│   │   └── Services/
+│   ├── config/
+│   │   └── l5-swagger.php
+│   ├── database/
+│   │   ├── factories/
+│   │   ├── migrations/
+│   │   └── seeders/
+│   ├── routes/
+│   │   ├── api.php
+│   │   ├── console.php
+│   │   └── web.php
+│   ├── storage/
+│   ├── tests/
+│   │   ├── Feature/
+│   │   └── Unit/
+│   ├── artisan
+│   ├── composer.json
+│   └── .env.example
+├── Desafio.md
+├── README.md
+└── .gitignore
 ```
 
-Os arquivos XML utilizados na importação ficam no diretório:
+---
 
-```text
-../database/xml/
-├── hotels.xml
-├── rooms.xml
-└── reserves.xml
-```
+# ⚙️ Instalação
 
-## ⚙️ Instalação
-
-Clone o projeto:
+Clone o repositório:
 
 ```bash
 git clone <URL_DO_REPOSITORIO>
 ```
 
-Entre no diretório da aplicação:
+Entre no diretório do projeto:
 
 ```bash
-cd foco-api
+cd TesteTecnico_Foco/foco-api
 ```
 
 Instale as dependências:
@@ -82,13 +97,13 @@ Instale as dependências:
 composer install
 ```
 
-Crie o arquivo `.env`:
+Copie o arquivo de ambiente:
 
 ```bash
 cp .env.example .env
 ```
 
-No Windows/PowerShell, caso necessário:
+No Windows PowerShell, caso necessário:
 
 ```powershell
 Copy-Item .env.example .env
@@ -100,99 +115,192 @@ Gere a chave da aplicação:
 php artisan key:generate
 ```
 
-## 🗄️ Banco de dados
+---
 
-O projeto utiliza SQLite.
+# 🗄️ Banco de dados
 
-Crie o arquivo do banco, caso ele ainda não exista:
+O projeto utiliza SQLite para facilitar a execução do desafio.
 
-```powershell
-New-Item database/database.sqlite -ItemType File
+Crie o arquivo:
+
+```text
+database/database.sqlite
 ```
 
-Execute as migrations:
+Depois execute as migrations:
 
 ```bash
 php artisan migrate
 ```
 
-As migrations criam as seguintes tabelas:
+Para recriar o banco do zero:
 
-```text
-hotels
-rooms
-reserves
-guests
-dailies
-payments
+```bash
+php artisan migrate:fresh
 ```
+
+---
+
+# 🧩 Modelo de dados
+
+O banco foi modelado a partir dos arquivos XML fornecidos no desafio.
+
+As principais entidades são:
+
+* `hotels`
+* `rooms`
+* `reserves`
+* `guests`
+* `dailies`
+* `payments`
+
+Também existem as tabelas padrão utilizadas pelo Laravel e Sanctum, como:
+
+* `users`
+* `personal_access_tokens`
 
 ### Relacionamentos
 
 ```text
 Hotel
-├── Rooms
-└── Reserves
-    ├── Guests
-    ├── Dailies
-    └── Payments
+ ├── hasMany Rooms
+ └── hasMany Reserves
 
 Room
-└── Reserves
+ ├── belongsTo Hotel
+ └── hasMany Reserves
+
+Reserve
+ ├── belongsTo Hotel
+ ├── belongsTo Room
+ ├── hasMany Guests
+ ├── hasMany Dailies
+ └── hasMany Payments
 ```
 
-## 📥 Importação dos XMLs
+As chaves estrangeiras utilizam integridade referencial e exclusão em cascata quando aplicável.
 
-A aplicação possui o comando Artisan:
+---
 
-```bash
-php artisan xml:import
-```
+# 📥 Importação dos arquivos XML
 
-O comando recupera os dados dos arquivos XML e persiste as informações no banco de dados.
+A aplicação possui um comando Artisan responsável por importar os arquivos XML fornecidos pelo desafio.
 
-Os dados importados incluem:
-
-* hotéis;
-* quartos;
-* reservas;
-* hóspedes;
-* diárias;
-* pagamentos.
-
-### Idempotência
-
-A importação foi implementada de forma idempotente.
-
-Isso significa que executar:
-
-```bash
-php artisan xml:import
-```
-
-mais de uma vez não deve gerar registros duplicados dos dados importados.
-
-### Validações da importação
-
-Durante a importação são verificadas as relações entre:
-
-* hotel;
-* quarto;
-* reserva.
-
-Também é registrada uma mensagem de log quando uma diária possui uma data fora do período da reserva.
-
-A informação original do XML é preservada, sem correção silenciosa do dado.
-
-## ⏰ Scheduler / CRON
-
-A importação foi configurada no Laravel Scheduler em:
+Os arquivos utilizados estão em:
 
 ```text
-routes/console.php
+database/xml/
+├── hotels.xml
+├── rooms.xml
+└── reserves.xml
 ```
 
-Configuração atual:
+Para executar a importação:
+
+```bash
+php artisan xml:import
+```
+
+O processo:
+
+1. Lê os arquivos XML.
+2. Importa os hotéis.
+3. Importa os quartos.
+4. Importa as reservas.
+5. Importa os hóspedes.
+6. Importa as diárias.
+7. Importa os pagamentos.
+8. Valida os relacionamentos entre hotel, quarto e reserva.
+9. Registra inconsistências nos logs.
+10. Executa toda a operação dentro de uma transação.
+
+---
+
+## 🔄 Idempotência
+
+A importação foi desenvolvida para ser executada mais de uma vez sem gerar registros duplicados.
+
+Os IDs presentes nos XMLs são preservados para hotéis, quartos e reservas.
+
+Antes de recriar os dados dependentes de uma reserva, como hóspedes, diárias e pagamentos, os registros anteriores são removidos e recriados.
+
+Dessa forma, executar:
+
+```bash
+php artisan xml:import
+```
+
+novamente mantém os dados consistentes.
+
+---
+
+## 📊 Dados importados
+
+Após a importação dos XMLs fornecidos pelo desafio, foram validados os seguintes registros:
+
+| Entidade   | Quantidade |
+| ---------- | ---------: |
+| Hotéis     |          3 |
+| Quartos    |          6 |
+| Reservas   |          6 |
+| Hóspedes   |          6 |
+| Diárias    |         18 |
+| Pagamentos |          1 |
+
+---
+
+# ⚠️ Tratamento de inconsistências
+
+Durante a importação foi identificada uma inconsistência na reserva de ID `6`.
+
+A reserva possui:
+
+```text
+Check-in:  2022-10-01
+Check-out: 2022-10-04
+```
+
+Porém, uma das diárias possui a data:
+
+```text
+2022-12-03
+```
+
+O sistema **não altera silenciosamente o dado original**.
+
+A decisão adotada foi:
+
+* preservar o dado recebido;
+* registrar um warning no log;
+* continuar a importação.
+
+O warning pode ser encontrado em:
+
+```text
+storage/logs/laravel.log
+```
+
+Essa abordagem evita assumir uma correção que não pode ser determinada com segurança apenas a partir do XML.
+
+---
+
+# ⏰ Agendamento da importação
+
+A importação foi integrada ao Laravel Scheduler.
+
+O agendamento atual é:
+
+```text
+Diariamente
+```
+
+O comando utilizado é:
+
+```bash
+php artisan xml:import
+```
+
+O agendamento utiliza:
 
 ```php
 Schedule::command('xml:import')
@@ -200,37 +308,73 @@ Schedule::command('xml:import')
     ->withoutOverlapping();
 ```
 
-Isso configura a execução diária do comando:
+O `withoutOverlapping()` evita que uma nova execução seja iniciada enquanto outra execução do mesmo comando ainda estiver em andamento.
 
-```bash
-php artisan xml:import
-```
-
-O `withoutOverlapping()` evita que uma nova execução seja iniciada enquanto outra importação ainda estiver em andamento.
-
-### Verificar tarefas agendadas
+Para visualizar os agendamentos:
 
 ```bash
 php artisan schedule:list
 ```
 
-### Executar o Scheduler manualmente
+---
 
-```bash
-php artisan schedule:run
+# 🔐 Autenticação
+
+A API utiliza **Laravel Sanctum** para autenticação baseada em Bearer Token.
+
+O fluxo é:
+
+```text
+Cliente
+   ↓
+POST /api/login
+   ↓
+E-mail + senha
+   ↓
+Laravel Sanctum
+   ↓
+Bearer Token
+   ↓
+Endpoints protegidos
 ```
 
-Em produção, o sistema operacional deve executar o Scheduler do Laravel periodicamente.
+### Login
 
-Exemplo de configuração do CRON em ambientes Linux:
+Endpoint:
 
-```cron
-* * * * * cd /caminho/do/projeto && php artisan schedule:run >> /dev/null 2>&1
+```http
+POST /api/login
 ```
 
-## 🛏️ API de quartos
+Exemplo:
 
-A API disponibiliza operações CRUD para quartos.
+```json
+{
+    "email": "usuario@example.com",
+    "password": "12345678"
+}
+```
+
+Resposta:
+
+```json
+{
+    "token": "TOKEN_GERADO",
+    "token_type": "Bearer"
+}
+```
+
+Para acessar endpoints protegidos:
+
+```http
+Authorization: Bearer TOKEN_GERADO
+```
+
+---
+
+# 🛏️ API de quartos
+
+A API possui CRUD completo para quartos.
 
 ### Listar quartos
 
@@ -238,42 +382,22 @@ A API disponibiliza operações CRUD para quartos.
 GET /api/rooms
 ```
 
-### Consultar um quarto
+### Consultar quarto
 
 ```http
 GET /api/rooms/{id}
 ```
 
-### Cadastrar quarto
+### Criar quarto
 
 ```http
 POST /api/rooms
-Content-Type: application/json
-```
-
-Exemplo:
-
-```json
-{
-    "hotel_id": 1,
-    "name": "Room 10 Hotel 1"
-}
 ```
 
 ### Atualizar quarto
 
 ```http
 PUT /api/rooms/{id}
-Content-Type: application/json
-```
-
-Exemplo:
-
-```json
-{
-    "hotel_id": 1,
-    "name": "Room 10 Updated"
-}
 ```
 
 ### Excluir quarto
@@ -282,15 +406,16 @@ Exemplo:
 DELETE /api/rooms/{id}
 ```
 
-## 🏨 API de reservas
+Todos os endpoints de quartos exigem autenticação.
 
-A aplicação disponibiliza um endpoint REST para criação de reservas.
+---
 
-### Criar reserva
+# 📅 API de reservas
+
+A API possui endpoint para criação de reservas.
 
 ```http
 POST /api/reserves
-Content-Type: application/json
 ```
 
 Exemplo:
@@ -298,131 +423,109 @@ Exemplo:
 ```json
 {
     "hotel_id": 1,
-    "room_id": 2,
-    "check_in": "2026-12-10",
-    "check_out": "2026-12-12",
-    "total": 500.00
+    "room_id": 1,
+    "check_in": "2026-10-10",
+    "check_out": "2026-10-12",
+    "total": 500
 }
 ```
 
-### Resposta de sucesso
+Antes de criar a reserva, a aplicação valida:
 
-HTTP:
+* existência do hotel;
+* existência do quarto;
+* relacionamento entre quarto e hotel;
+* validade das datas;
+* `check_out` posterior ao `check_in`;
+* conflito de reserva para o mesmo quarto.
 
-```text
-201 Created
-```
+Em caso de conflito de datas, a API retorna:
 
-Exemplo:
-
-```json
-{
-    "message": "Reserva criada com sucesso.",
-    "data": {
-        "hotel_id": 1,
-        "room_id": 2,
-        "check_in": "2026-12-10",
-        "check_out": "2026-12-12",
-        "total": "500.00"
-    }
-}
-```
-
-## 🔎 Regras de reserva
-
-Antes de criar uma reserva, a API verifica:
-
-### Hotel existente
-
-O `hotel_id` informado deve existir.
-
-### Quarto existente
-
-O `room_id` informado deve existir.
-
-### Relação entre hotel e quarto
-
-O quarto deve pertencer ao hotel informado.
-
-### Datas
-
-A data de checkout deve ser posterior à data de check-in.
-
-### Disponibilidade
-
-A API verifica se já existe uma reserva para o mesmo quarto no período informado.
-
-Reservas consecutivas são permitidas.
-
-Exemplo:
-
-```text
-Reserva 1: 10/12 → 12/12
-Reserva 2:          12/12 → 14/12
-```
-
-Esse cenário não é considerado conflito.
-
-Já uma sobreposição:
-
-```text
-Reserva 1: 10/12 → 12/12
-Reserva 2:      11/12 → 13/12
-```
-
-é rejeitada.
-
-Nesse caso a API retorna:
-
-```text
+```http
 422 Unprocessable Entity
 ```
 
-```json
-{
-    "message": "O quarto não está disponível para o período informado."
-}
+---
+
+# 🏗️ Arquitetura da aplicação
+
+A aplicação utiliza uma separação de responsabilidades baseada na estrutura do Laravel.
+
+```text
+HTTP Request
+     ↓
+Controller
+     ↓
+Form Request
+     ↓
+Service
+     ↓
+Model / Eloquent
+     ↓
+Database
 ```
 
-## 📚 Documentação da API — Swagger / OpenAPI 3
+### Controllers
+
+Responsáveis por receber as requisições HTTP e retornar as respostas JSON.
+
+### Form Requests
+
+Responsáveis pela validação dos dados recebidos pela API.
+
+### Services
+
+Responsáveis pelas regras de negócio que não devem ficar diretamente nos Controllers.
+
+### Models
+
+Representam as entidades persistidas no banco de dados e seus relacionamentos.
+
+### Commands
+
+Responsáveis pela execução da importação dos arquivos XML.
+
+---
+
+# 📚 Swagger / OpenAPI 3
 
 A API possui documentação interativa utilizando Swagger/OpenAPI 3.
 
-Após iniciar a aplicação:
-
-```bash
-php artisan serve
-```
-
-A documentação pode ser acessada em:
-
-```text
-http://127.0.0.1:8000/api/documentation
-```
-
-A interface do Swagger permite visualizar os endpoints disponíveis e executar requisições diretamente pela documentação.
-
-### Gerar a documentação
-
-Caso seja necessário regenerar a documentação OpenAPI:
+Para gerar a documentação:
 
 ```bash
 php artisan l5-swagger:generate
 ```
 
-Os arquivos gerados são armazenados em:
+Depois execute a aplicação:
 
-```text
-storage/api-docs/
+```bash
+php artisan serve
 ```
 
-Esses arquivos são gerados automaticamente e não são versionados pelo Git.
+Acesse:
 
-## 🧪 Testes automatizados
+```text
+http://127.0.0.1:8000/api/documentation
+```
 
-Os testes foram implementados utilizando Pest sobre a infraestrutura do PHPUnit.
+A documentação permite visualizar:
 
-Executar todos os testes:
+* endpoints;
+* métodos HTTP;
+* parâmetros;
+* exemplos de requisições;
+* respostas;
+* autenticação Bearer;
+* códigos HTTP utilizados.
+
+O botão **Authorize** pode ser utilizado para informar o Bearer Token e testar os endpoints protegidos.
+
+---
+
+# 🧪 Testes automatizados
+
+Os testes automatizados são executados com:
 
 ```bash
 php artisan test
@@ -431,155 +534,256 @@ php artisan test
 Resultado atual:
 
 ```text
-Tests: 10 passed
-Assertions: 30
+Tests: 14 passed
+Assertions: 37
 ```
 
-Os testes cobrem, entre outros cenários:
+Os testes cobrem principalmente:
 
-* criação de reserva válida;
-* hotel inexistente;
-* quarto inexistente;
-* quarto pertencente a outro hotel;
-* data de checkout inválida;
-* valor total negativo;
-* conflito de reservas;
-* reserva em período disponível.
+* autenticação;
+* credenciais inválidas;
+* proteção dos endpoints;
+* acesso autenticado;
+* criação de reservas;
+* validações;
+* conflitos de reserva;
+* regras de negócio.
 
-Os testes de integração utilizam `RefreshDatabase` para manter o banco de testes isolado.
+---
 
-## 🧱 Arquitetura da reserva
+# 🔄 Fluxos principais
 
-A criação de reservas utiliza responsabilidades separadas.
-
-### Form Request
-
-`StoreReserveRequest`
-
-Responsável pela validação dos dados recebidos pela API.
-
-### Controller
-
-`ReserveController`
-
-Responsável pelo fluxo HTTP da requisição.
-
-### Service
-
-`ReserveService`
-
-Responsável pelas regras de negócio relacionadas à reserva, como:
-
-* verificar se o quarto pertence ao hotel;
-* verificar conflito de datas;
-* criar a reserva.
-
-Essa separação mantém o Controller mais simples e facilita a manutenção e os testes.
-
-## 🔄 Fluxo da importação
+## Fluxo de importação
 
 ```text
-Arquivos XML
-     ↓
-XmlImportCommand
-     ↓
+XML
+ ↓
 XmlImportService
-     ↓
-Validação dos relacionamentos
-     ↓
-Persistência no banco
-     ↓
-Logs de inconsistências
+ ↓
+Validação
+ ↓
+Transação
+ ↓
+Eloquent
+ ↓
+SQLite
+ ↓
+Logs
 ```
 
-## 🔄 Fluxo da criação de reserva
+## Fluxo de autenticação
 
 ```text
-Cliente
-   ↓
+POST /api/login
+ ↓
+Validação
+ ↓
+User
+ ↓
+Sanctum
+ ↓
+Bearer Token
+```
+
+## Fluxo de reserva
+
+```text
 POST /api/reserves
-   ↓
-StoreReserveRequest
-   ↓
-ReserveController
-   ↓
+ ↓
+Form Request
+ ↓
+Validação
+ ↓
 ReserveService
-   ├── valida hotel/quarto
-   ├── verifica disponibilidade
-   └── cria reserva
-   ↓
-Banco de dados
-   ↓
-Resposta JSON
+ ↓
+Validação do hotel/quarto
+ ↓
+Verificação de conflito
+ ↓
+Reserve
+ ↓
+SQLite
+ ↓
+JSON
 ```
 
-## 📝 Versionamento
+---
 
-O projeto utiliza Git para versionamento do código e das alterações de banco através das migrations.
+# 📝 Versionamento
 
-As principais etapas foram organizadas em commits independentes:
+O projeto utiliza Git para controle de versão.
 
-```text
-chore: initialize Laravel technical challenge
+As principais etapas do desenvolvimento foram organizadas em commits separados, contemplando:
 
-feat: implement database model and XML import foundation
+* inicialização do projeto;
+* modelagem do banco;
+* importação dos XMLs;
+* CRUD de quartos;
+* API de reservas;
+* testes automatizados;
+* agendamento do importador;
+* documentação;
+* Swagger/OpenAPI;
+* autenticação com Sanctum.
 
-feat: implement rooms CRUD API
+Exemplo de consulta do histórico:
 
-feat: implement reservation API
-
-test: add reservation feature tests
-
-feat: schedule XML import
-
-docs: document project setup and API
+```bash
+git log --oneline
 ```
 
-## ▶️ Executando a aplicação
+---
 
-Inicie o servidor local:
+# ▶️ Executando o projeto
+
+Após configurar o ambiente:
+
+```bash
+cd foco-api
+```
+
+Execute:
+
+```bash
+php artisan migrate
+```
+
+Importe os XMLs:
+
+```bash
+php artisan xml:import
+```
+
+Gere a documentação:
+
+```bash
+php artisan l5-swagger:generate
+```
+
+Execute os testes:
+
+```bash
+php artisan test
+```
+
+Inicie o servidor:
 
 ```bash
 php artisan serve
 ```
 
-A aplicação ficará disponível em:
+A API estará disponível em:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-A documentação Swagger ficará disponível em:
+Swagger:
 
 ```text
 http://127.0.0.1:8000/api/documentation
 ```
 
-## 🔐 Configurações de ambiente
+---
 
-Informações sensíveis e configurações específicas do ambiente devem permanecer no arquivo `.env`.
+# 🔧 Variáveis de ambiente
+
+As principais configurações ficam no arquivo:
+
+```text
+foco-api/.env
+```
+
+Exemplo para SQLite:
+
+```env
+DB_CONNECTION=sqlite
+```
 
 O arquivo `.env` não deve ser versionado.
 
-Para configurar um novo ambiente, utilize:
+---
 
-```bash
-cp .env.example .env
-php artisan key:generate
-```
+# ✅ Requisitos do desafio
 
-## 📌 Observações
+| Requisito                                | Status |
+| ---------------------------------------- | ------ |
+| Desenvolver em PHP/Laravel               | ✅      |
+| Modelar banco a partir dos XMLs          | ✅      |
+| Importar XML                             | ✅      |
+| Persistir dados no banco                 | ✅      |
+| Executar importação via comando          | ✅      |
+| Possibilitar execução via CRON/Scheduler | ✅      |
+| API REST                                 | ✅      |
+| Respostas em JSON                        | ✅      |
+| CRUD de quartos                          | ✅      |
+| Endpoint de criação de reserva           | ✅      |
+| Documentação do processo                 | ✅      |
+| Versionamento Git                        | ✅      |
+| Swagger/OpenAPI 3                        | ✅      |
+| PHPUnit/Pest                             | ✅      |
+| Autenticação                             | ✅      |
+| Validação de conflitos de reserva        | ✅      |
+| Tratamento de inconsistências nos XMLs   | ✅      |
 
-Este projeto foi desenvolvido como solução para um desafio técnico da Foco Multimídia, tendo como foco os requisitos obrigatórios de:
+---
 
-* modelagem do banco;
-* importação de XML;
-* execução automatizada da importação;
-* API REST de quartos;
-* API REST de reservas;
-* respostas JSON;
+# ⭐ Diferenciais implementados
+
+Além dos requisitos principais, foram implementados:
+
+* Laravel Sanctum;
+* autenticação Bearer Token;
+* Swagger/OpenAPI 3;
 * testes automatizados;
-* versionamento do projeto;
-* documentação da API utilizando Swagger/OpenAPI 3.
+* separação de regras de negócio em Services;
+* Form Requests para validação;
+* Laravel Scheduler;
+* proteção contra execução simultânea do importador;
+* transação durante importação;
+* importação idempotente;
+* logs para inconsistências;
+* validação de disponibilidade do quarto durante criação da reserva;
+* controle de status HTTP;
+* respostas padronizadas em JSON;
+* versionamento organizado com Git.
 
-Funcionalidades adicionais que podem ser incorporadas em futuras evoluções incluem autenticação e autorização, Docker, logs estruturados e outras regras de negócio.
+---
+
+# 🚀 Possíveis evoluções
+
+Como próximos passos, a aplicação poderia evoluir com:
+
+* consulta específica de disponibilidade de quartos;
+* gerenciamento completo de hotéis;
+* gerenciamento de usuários;
+* perfis e permissões;
+* fluxo completo de pagamentos;
+* descontos e cupons;
+* promoções;
+* taxas e juros;
+* logs estruturados;
+* Docker;
+* pipeline CI/CD;
+* maior cobertura de testes;
+* deploy em ambiente AWS;
+* monitoramento e observabilidade.
+
+---
+
+# 👨‍💻 Sobre o projeto
+
+Projeto desenvolvido por **Rafael Santos** como parte de um desafio técnico para a Foco Multimídia.
+
+O objetivo foi construir uma API funcional utilizando Laravel, aplicando conceitos de:
+
+* desenvolvimento de APIs REST;
+* modelagem de dados;
+* integração com XML;
+* persistência em banco de dados;
+* autenticação;
+* validação;
+* testes automatizados;
+* documentação;
+* versionamento de código;
+* organização de regras de negócio.
