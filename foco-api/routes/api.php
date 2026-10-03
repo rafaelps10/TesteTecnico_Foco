@@ -6,7 +6,8 @@ use App\Http\Controllers\Api\ReserveController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:login');
 
 Route::middleware('auth:sanctum')->group(function () {
 

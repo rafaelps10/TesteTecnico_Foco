@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -72,5 +73,26 @@ class AuthTest extends TestCase
             ->assertJsonStructure([
                 'data',
             ]);
+    }
+
+    public function test_login_is_rate_limited_after_five_attempts(): void
+    {
+        RateLimiter::clear('127.0.0.1');
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $response = $this->postJson('/api/login', [
+                'email' => 'usuario-inexistente@teste.com',
+                'password' => 'senha-errada',
+            ]);
+
+            $response->assertStatus(401);
+        }
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'usuario-inexistente@teste.com',
+            'password' => 'senha-errada',
+        ]);
+
+        $response->assertStatus(429);
     }
 }
