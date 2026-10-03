@@ -2,11 +2,19 @@
 
 use App\Models\Hotel;
 use App\Models\Room;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum');
+});
+
 test('cria uma reserva com dados válidos', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -38,6 +46,7 @@ test('cria uma reserva com dados válidos', function () {
 });
 
 test('não cria reserva quando o hotel não existe', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -67,6 +76,7 @@ test('não cria reserva quando o hotel não existe', function () {
 });
 
 test('não cria reserva quando o quarto não existe', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -91,6 +101,7 @@ test('não cria reserva quando o quarto não existe', function () {
 });
 
 test('não cria reserva quando o quarto não pertence ao hotel', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -120,6 +131,7 @@ test('não cria reserva quando o quarto não pertence ao hotel', function () {
 });
 
 test('não cria reserva quando a data de saída é anterior à data de entrada', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -149,6 +161,7 @@ test('não cria reserva quando a data de saída é anterior à data de entrada',
 });
 
 test('não cria reserva quando o valor total é negativo', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -178,6 +191,7 @@ test('não cria reserva quando o valor total é negativo', function () {
 });
 
 test('não cria reserva quando o quarto já está reservado no período', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -211,6 +225,7 @@ test('não cria reserva quando o quarto já está reservado no período', functi
 });
 
 test('cria reserva quando o quarto está disponível no período', function () {
+
     $hotel = Hotel::create([
         'name' => 'Hotel Teste',
     ]);
@@ -237,10 +252,6 @@ test('cria reserva quando o quarto está disponível no período', function () {
     ]);
 
     $response->assertStatus(201);
-
-    $response->assertJson([
-        'message' => 'Reserva criada com sucesso.',
-    ]);
 
     $response->assertJson([
         'message' => 'Reserva criada com sucesso.',
