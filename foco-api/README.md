@@ -16,6 +16,7 @@ O projeto realiza a importação de dados hoteleiros a partir de arquivos XML, p
 * XML
 * JSON
 * REST API
+* Swagger / OpenAPI 3
 
 ## 📋 Requisitos
 
@@ -35,7 +36,10 @@ foco-api/
 │   │   ├── Controllers/
 │   │   └── Requests/
 │   ├── Models/
+│   ├── OpenApi/
 │   └── Services/
+├── config/
+│   └── l5-swagger.php
 ├── database/
 │   └── migrations/
 ├── routes/
@@ -127,14 +131,14 @@ payments
 
 ```text
 Hotel
- ├── Rooms
- └── Reserves
-       ├── Guests
-       ├── Dailies
-       └── Payments
+├── Rooms
+└── Reserves
+    ├── Guests
+    ├── Dailies
+    └── Payments
 
 Room
- └── Reserves
+└── Reserves
 ```
 
 ## 📥 Importação dos XMLs
@@ -380,6 +384,40 @@ Nesse caso a API retorna:
 }
 ```
 
+## 📚 Documentação da API — Swagger / OpenAPI 3
+
+A API possui documentação interativa utilizando Swagger/OpenAPI 3.
+
+Após iniciar a aplicação:
+
+```bash
+php artisan serve
+```
+
+A documentação pode ser acessada em:
+
+```text
+http://127.0.0.1:8000/api/documentation
+```
+
+A interface do Swagger permite visualizar os endpoints disponíveis e executar requisições diretamente pela documentação.
+
+### Gerar a documentação
+
+Caso seja necessário regenerar a documentação OpenAPI:
+
+```bash
+php artisan l5-swagger:generate
+```
+
+Os arquivos gerados são armazenados em:
+
+```text
+storage/api-docs/
+```
+
+Esses arquivos são gerados automaticamente e não são versionados pelo Git.
+
 ## 🧪 Testes automatizados
 
 Os testes foram implementados utilizando Pest sobre a infraestrutura do PHPUnit.
@@ -483,11 +521,18 @@ As principais etapas foram organizadas em commits independentes:
 
 ```text
 chore: initialize Laravel technical challenge
+
 feat: implement database model and XML import foundation
+
 feat: implement rooms CRUD API
+
 feat: implement reservation API
+
 test: add reservation feature tests
+
 feat: schedule XML import
+
+docs: document project setup and API
 ```
 
 ## ▶️ Executando a aplicação
@@ -502,6 +547,12 @@ A aplicação ficará disponível em:
 
 ```text
 http://127.0.0.1:8000
+```
+
+A documentação Swagger ficará disponível em:
+
+```text
+http://127.0.0.1:8000/api/documentation
 ```
 
 ## 🔐 Configurações de ambiente
@@ -528,8 +579,7 @@ Este projeto foi desenvolvido como solução para um desafio técnico da Foco Mu
 * API REST de reservas;
 * respostas JSON;
 * testes automatizados;
-* versionamento do projeto.
+* versionamento do projeto;
+* documentação da API utilizando Swagger/OpenAPI 3.
 
-Funcionalidades adicionais podem ser incorporadas posteriormente, como documentação OpenAPI/Swagger, autenticação e autorização, Docker, logs estruturados e outras regras de negócio.
-
-````
+Funcionalidades adicionais que podem ser incorporadas em futuras evoluções incluem autenticação e autorização, Docker, logs estruturados e outras regras de negócio.
