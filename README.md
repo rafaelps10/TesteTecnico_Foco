@@ -873,5 +873,3 @@ O objetivo foi construir uma API funcional utilizando Laravel, aplicando conceit
 * documentação;
 * versionamento de código;
 * organização de regras de negócio.
-
-````
