@@ -815,30 +815,26 @@ O arquivo `.env` não deve ser versionado.
 
 ---
 
-# ⭐ Diferenciais implementados
+# Diferenciais implementados
 
-Além dos requisitos principais, foram implementados:
-
-* Laravel Sanctum;
-* autenticação Bearer Token;
-* rate limiting no endpoint de login;
-* Swagger/OpenAPI 3;
-* testes automatizados;
-* separação de regras de negócio em Services;
-* Form Requests para validação;
-* Laravel Scheduler;
-* proteção contra execução simultânea do importador;
-* transação durante importação;
-* importação idempotente;
-* logs para inconsistências;
-* validação de disponibilidade do quarto durante criação da reserva;
-* controle de status HTTP;
-* respostas padronizadas em JSON;
-* versionamento organizado com Git.
+* API REST com respostas em JSON
+* Autenticação e proteção dos endpoints com Laravel Sanctum
+* Rate limiting para tentativas de login
+* Documentação da API com Swagger / OpenAPI 3
+* Testes automatizados
+* Separação de regras de negócio em Services
+* Validação de dados com Form Requests
+* Importação de XML por comando Artisan
+* Execução programada da importação via Scheduler
+* Importação idempotente
+* Verificação de disponibilidade dos quartos
+* Logs de aplicação
+* Uso adequado dos verbos HTTP
+* Versionamento do projeto com Git
 
 ---
 
-# 🚀 Possíveis evoluções
+# Possíveis evoluções
 
 Como próximos passos, a aplicação poderia evoluir com:
 
@@ -859,7 +855,7 @@ Como próximos passos, a aplicação poderia evoluir com:
 
 ---
 
-# 👨‍💻 Sobre o projeto
+# Sobre o projeto
 
 Projeto desenvolvido por **Rafael Santos** como parte de um desafio técnico para a Foco Multimídia.
 
