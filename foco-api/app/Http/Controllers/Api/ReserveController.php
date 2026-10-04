@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReserveRequest;
 use App\Services\ReserveService;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 
 class ReserveController extends Controller
@@ -85,6 +86,11 @@ class ReserveController extends Controller
         );
 
         if (!$roomBelongsToHotel) {
+            Log::warning('Tentativa de reserva com quarto pertencente a outro hotel.', [
+                'hotel_id' => $data['hotel_id'],
+                'room_id' => $data['room_id'],
+            ]);
+
             return response()->json([
                 'message' => 'O quarto informado não pertence ao hotel informado.',
             ], 422);
@@ -97,12 +103,26 @@ class ReserveController extends Controller
         );
 
         if ($hasConflict) {
+            Log::warning('Tentativa de reserva em quarto já ocupado.', [
+                'room_id' => $data['room_id'],
+                'check_in' => $data['check_in'],
+                'check_out' => $data['check_out'],
+            ]);
+
             return response()->json([
                 'message' => 'O quarto não está disponível para o período informado.',
             ], 422);
         }
 
         $reserve = $reserveService->create($data);
+
+        Log::info('Reserva criada.', [
+            'reserve_id' => $reserve->id,
+            'hotel_id' => $reserve->hotel_id,
+            'room_id' => $reserve->room_id,
+            'check_in' => $reserve->check_in->toDateString(),
+            'check_out' => $reserve->check_out->toDateString(),
+        ]);
 
         return response()->json([
             'message' => 'Reserva criada com sucesso.',

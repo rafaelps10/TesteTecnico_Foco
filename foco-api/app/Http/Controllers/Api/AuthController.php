@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
@@ -68,10 +69,21 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            Log::warning('Tentativa de login com credenciais inválidas.', [
+                'email' => $credentials['email'],
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json([
                 'message' => 'Credenciais inválidas.',
             ], 401);
         }
+
+        Log::info('Login realizado com sucesso.', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
 
