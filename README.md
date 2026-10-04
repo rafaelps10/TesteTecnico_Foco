@@ -4,7 +4,7 @@ API REST desenvolvida como solução para o desafio técnico da Foco Multimídia
 
 O projeto realiza a importação de dados hoteleiros a partir de arquivos XML, persiste essas informações em banco de dados e disponibiliza APIs REST para gerenciamento de quartos e criação de reservas.
 
-O projeto também implementa autenticação baseada em tokens, documentação interativa com Swagger/OpenAPI 3, testes automatizados e execução agendada da importação dos arquivos XML.
+O projeto também implementa autenticação baseada em tokens, proteção contra excesso de tentativas de login, documentação interativa com Swagger/OpenAPI 3, testes automatizados e execução agendada da importação dos arquivos XML.
 
 ---
 
@@ -139,6 +139,8 @@ Para recriar o banco do zero:
 php artisan migrate:fresh
 ```
 
+> **Importante:** o arquivo `database/database.sqlite` é utilizado localmente e não precisa ser versionado no Git.
+
 ---
 
 # 🧩 Modelo de dados
@@ -154,7 +156,7 @@ As principais entidades são:
 * `dailies`
 * `payments`
 
-Também existem as tabelas padrão utilizadas pelo Laravel e Sanctum, como:
+Também existem as tabelas utilizadas pelo Laravel e Sanctum, como:
 
 * `users`
 * `personal_access_tokens`
@@ -310,10 +312,42 @@ Schedule::command('xml:import')
 
 O `withoutOverlapping()` evita que uma nova execução seja iniciada enquanto outra execução do mesmo comando ainda estiver em andamento.
 
-Para visualizar os agendamentos:
+### Visualizar os agendamentos
 
 ```bash
 php artisan schedule:list
+```
+
+### Executar o Scheduler continuamente em desenvolvimento
+
+Para manter o Scheduler executando continuamente em ambiente local:
+
+```bash
+php artisan schedule:work
+```
+
+O Laravel ficará responsável por verificar os agendamentos e executar o comando no horário configurado.
+
+### Execução via CRON em ambiente Linux
+
+Em um servidor Linux, o sistema operacional pode executar o Scheduler a cada minuto:
+
+```cron
+* * * * * cd /caminho/do/projeto/foco-api && php artisan schedule:run >> /dev/null 2>&1
+```
+
+O fluxo é:
+
+```text
+CRON
+  ↓
+php artisan schedule:run
+  ↓
+Laravel Scheduler
+  ↓
+xml:import
+  ↓
+Importação dos XMLs
 ```
 
 ---
@@ -372,9 +406,39 @@ Authorization: Bearer TOKEN_GERADO
 
 ---
 
+# 🛡️ Rate limiting do login
+
+O endpoint de autenticação possui proteção contra excesso de tentativas de login.
+
+A rota utiliza o middleware:
+
+```text
+throttle:login
+```
+
+O limite configurado é:
+
+```text
+5 tentativas por minuto por endereço IP
+```
+
+Após atingir o limite, novas tentativas retornam:
+
+```http
+429 Too Many Requests
+```
+
+Essa proteção reduz o risco de ataques automatizados de força bruta contra o endpoint de autenticação.
+
+O comportamento é coberto por teste automatizado.
+
+---
+
 # 🛏️ API de quartos
 
 A API possui CRUD completo para quartos.
+
+Todos os endpoints de quartos exigem autenticação.
 
 ### Listar quartos
 
@@ -394,10 +458,28 @@ GET /api/rooms/{id}
 POST /api/rooms
 ```
 
+Exemplo:
+
+```json
+{
+    "hotel_id": 1,
+    "name": "Room 3 Hotel 1"
+}
+```
+
 ### Atualizar quarto
 
 ```http
 PUT /api/rooms/{id}
+```
+
+Exemplo:
+
+```json
+{
+    "hotel_id": 1,
+    "name": "Room 3 Hotel 1 - Updated"
+}
 ```
 
 ### Excluir quarto
@@ -405,8 +487,6 @@ PUT /api/rooms/{id}
 ```http
 DELETE /api/rooms/{id}
 ```
-
-Todos os endpoints de quartos exigem autenticação.
 
 ---
 
@@ -444,6 +524,8 @@ Em caso de conflito de datas, a API retorna:
 ```http
 422 Unprocessable Entity
 ```
+
+com uma mensagem informando que o quarto não está disponível para o período solicitado.
 
 ---
 
@@ -534,8 +616,8 @@ php artisan test
 Resultado atual:
 
 ```text
-Tests: 14 passed
-Assertions: 37
+Tests: 13 passed
+Assertions: 41
 ```
 
 Os testes cobrem principalmente:
@@ -544,6 +626,7 @@ Os testes cobrem principalmente:
 * credenciais inválidas;
 * proteção dos endpoints;
 * acesso autenticado;
+* rate limiting do login;
 * criação de reservas;
 * validações;
 * conflitos de reserva;
@@ -575,6 +658,8 @@ Logs
 
 ```text
 POST /api/login
+ ↓
+Rate Limiter
  ↓
 Validação
  ↓
@@ -624,7 +709,9 @@ As principais etapas do desenvolvimento foram organizadas em commits separados, 
 * agendamento do importador;
 * documentação;
 * Swagger/OpenAPI;
-* autenticação com Sanctum.
+* autenticação com Sanctum;
+* proteção contra excesso de tentativas de login;
+* limpeza dos testes padrão do Laravel.
 
 Exemplo de consulta do histórico:
 
@@ -642,7 +729,7 @@ Após configurar o ambiente:
 cd foco-api
 ```
 
-Execute:
+Execute as migrations:
 
 ```bash
 php artisan migrate
@@ -734,6 +821,7 @@ Além dos requisitos principais, foram implementados:
 
 * Laravel Sanctum;
 * autenticação Bearer Token;
+* rate limiting no endpoint de login;
 * Swagger/OpenAPI 3;
 * testes automatizados;
 * separação de regras de negócio em Services;
@@ -782,8 +870,12 @@ O objetivo foi construir uma API funcional utilizando Laravel, aplicando conceit
 * integração com XML;
 * persistência em banco de dados;
 * autenticação;
+* controle de acesso;
+* rate limiting;
 * validação;
 * testes automatizados;
 * documentação;
 * versionamento de código;
 * organização de regras de negócio.
+
+````
